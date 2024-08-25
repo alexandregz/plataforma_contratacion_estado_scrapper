@@ -3,7 +3,7 @@
 Scrapper para parsear certas URLs da Plataforma de contratacion do Estado (https://contrataciondelestado.es/)
 
 
-## Funcionamento
+## Funcionamento
 
 Comproba cada link xeral (Documentos, Licitacions, Contratos Menores, Encargos a medios propios e Consultas preliminares), creando unha BD para manter un histórico.
 
@@ -17,16 +17,16 @@ Polo de agora so parsea licitacións e contratos menores.
 
 - puppeteer
 - bun:sqlite
+- node:fs, stream e util
 
 
 ## How to
 
 - A(s) URL(s) que se parsean deben extraerse manualmente do Perfil Contratante
 - Crea unha BD "nombre_de_ficheiro_json.db" e inserta cada expediente encontrado se non está insertado previamente
-- (ToDo) descarga os PDFs relacionados en cada expediente encontrado
+- descarga os PDFs relacionados en cada expediente encontrado, separando por directorios segundo o nome da táboa e subdirectorios cada expediente
 
 
 ## ToDo
 
-- Seguir cada expediente e baixar PDF relacionado
 - (?) extraer URLs do Perfil Contratante directamente
