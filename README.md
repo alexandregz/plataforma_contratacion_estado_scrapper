@@ -13,7 +13,7 @@ Polo de agora non discrimina nen tipo de contrato, estado, adxudicatario, etc.
 Polo de agora so parsea licitacións e contratos menores.
 
 
-## Requerimentos
+## Requerimentos
 
 - puppeteer
 - bun:sqlite
