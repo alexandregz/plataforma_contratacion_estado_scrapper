@@ -2,7 +2,7 @@
 exemplos_html/*
 
 *json
-!exemplo.json
+!exemplo*.json
 
 PDF/*
 
