@@ -9,7 +9,7 @@ const { enviarCorreoNovosExpedientes } = require('./lib/enviarCorreoNovosExpedie
 
 // --- uso
 function usage() {
-    console.log('Uso: '+process.argv[0]+' '+process.argv[1]+' NOME_DB TABLE')
+    console.log('Uso: '+process.argv[0]+' '+process.argv[1]+' NOME_DB TABLE [YYYY-MM-DD]')
     process.exit(0);
 }
 if(!process.argv[3]) {
@@ -19,14 +19,21 @@ if(!process.argv[3]) {
 const name_db = process.argv[2]
 const table_db = process.argv[3]
 
+let dia = new Date().toISOString().slice(0, 10);
+if(process.argv[4]) {
+    dia = process.argv[4]
+}
+
 // cargar db
 loadDB(name_db)
 
+
+
 // comezo fluxo
-console.log("Enviando email forzado (cos resultados do dia de hoxe)")
+console.log("Enviando email forzado (cos resultados do dia "+dia+")")
 
 try {
-    const response = await enviarCorreoNovosExpedientes(name_db, table_db);
+    const response = await enviarCorreoNovosExpedientes(name_db, table_db, dia);
     //console.log('Email sent successfully:', response);
     console.log('Informe de cambios enviado correctamente');
 } catch (err) {
