@@ -1,5 +1,26 @@
 {
-  "Alcaldia": "xxX",
-  "Pleno": "xxx",
-  "Entidade 3": "xxxx"
-}
+  "ENTIDADES": {
+        "Alcaldia": {
+                      "url":"xxx",
+                      "limite_paxinas": 1
+                    },
+        "Pleno": {
+                      "url":"xxx"
+                },
+        "Entidade 3": {
+                      "url":"xxxx",
+                      "limite_paxinas": 2
+                }
+  },
+
+    "EMAIL_CAMPOS_ENVIO": {
+      "from": "xx",
+      "to": "xx@gmail.com"
+    },
+    "EMAIL_CONFIG": {
+      "user": "xx",
+      "password": "xx",
+      "host": "mail.xx.com",
+      "ssl": true
+    }
+  }

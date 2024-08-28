@@ -16,10 +16,6 @@ const { loadDB } = require('./lib/sqliteAccions');
 // parseador de licitacions e contratos menores
 const { parsearResultadosLicitacionsContratos } = require('./lib/parsearResultadosLicitacionsContratos');
 
-// para ler config
-const { readFileSync } = require('fs');
-
-
 // --- uso
 //  CONCELLO.json é un json key/value, sendo key o nome da entidade e value a URL directa (ver Perfil Contratante)
 //  database.db e por se empregamos un ficheiro temporal (ames_skipped.json, por exemplo), para seguir gardando en taboas reais (ames.db, por exemplo)
@@ -42,10 +38,8 @@ if(process.argv[3]) {
 // cargar db
 loadDB(nome_db)
 
-
 // ler config
-const config = readFileSync('./' + process.argv[2]);
-const urls = JSON.parse(config);
+const { CONFIG } = require('./lib/config.js');
 
 
 // loxica
@@ -68,11 +62,13 @@ const urls = JSON.parse(config);
     }
 
     // as entidades do .json vanse recorrendo unha a unha
-    for (const entidade in urls) {
+    for (const entidade in CONFIG.ENTIDADES) {
         const entidade_db = entidade.replace(/ /g, "_")
 
+        const url = CONFIG.ENTIDADES[entidade].url
+
         // GOTO pages
-        console.log("Aberta "+entidade+" de " + concello + ": " + urls[entidade])
+        console.log("Aberta "+entidade+" de " + concello + ": " + url)
         {
             const targetPage = page;
             const promises = [];
@@ -81,7 +77,7 @@ const urls = JSON.parse(config);
             }
             startWaitingForEvents();
             // esta url hai que quitala manualmente, buscando o Perfil Contratante (ToDo extraelas automaticamente tamen?)
-            await targetPage.goto(urls[entidade]);
+            await targetPage.goto(url);
             await Promise.all(promises);
 
             // CLICK en LICITACIONS e CONTRATOS MENORES (que son os que nos importan, polo de agora) 
@@ -106,7 +102,7 @@ const urls = JSON.parse(config);
                 }
 
                 // exportada loxica a módulo
-                await parsearResultadosLicitacionsContratos(browser, page, db_name, concello)
+                await parsearResultadosLicitacionsContratos(browser, page, db_name, concello, entidade)
             }
         }
     }

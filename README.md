@@ -28,6 +28,17 @@ Polo de agora so parsea licitacións e contratos menores.
 - descarga os PDFs relacionados en cada expediente encontrado, separando por directorios segundo o nome da táboa e subdirectorios cada expediente
 - envía diariamente os expedientes insertados (novos) do día actual (ver exemplo*json para configurar o email de orixe/destino)
 
+# Config en .json
+
+A config vai nun ficheiro `.json`, así **non hai que instalar nada** adicional.
+
+- `exemplo.json`: exemplo de ficheiro dun concello:
+  - en `ENTIDADES` están as URLs do Perfil Contratante de cada entidade que queremos parsear así como o límite de páxinas a recorrer:
+    - `limite_paxinas`: límite de páxinas a parsear dunha entidade do CONCELLO que indiquemos, a partir desa páxina non se seguirá recorrendo resultados. Se hai 500 páxinas de resultados en, por exemplo "Xunta de Goberno", podemos ponher de límite: `"Xunta de Goberno": { limite_paxinas: 10 }` e só recorrerá as 10 primeiras páxinas, deixando 490 sen seguir. As entidades inclúen todos os tipos de consulta, tanto "licitacións" como "contratos menores", polo que o límite é o mesmo para os dous tipos.
+
+  - en `EMAIL_CAMPOS_ENVIO`, os campos empregados no envío de `emailjs`
+  - en `EMAIL_CONFIG` a config de `emailjs` da conta a empregar para enviar (se é gmail debes crear un password de aplicación se tes habilitada a autentación de dous factores)
+
 
 ## ToDo
 
