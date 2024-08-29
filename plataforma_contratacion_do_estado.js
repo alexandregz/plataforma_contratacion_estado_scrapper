@@ -8,13 +8,13 @@
  * 
  * NOTA: empregar "node plataforma_contratacion_do_estado.js" se dá erro o sqlite3 de dyld[xxxx] ou similar
  */
-const puppeteer = require('puppeteer');
+import puppeteer from 'puppeteer';
 
 // db (as de createDb, insertDB,... empreganse no parseador e aqui non fan falha)
-const { loadDB } = require('./lib/sqliteAccions');
+import { loadDB } from './lib/sqliteAccions.js';
 
 // parseador de licitacions e contratos menores
-const { parsearResultadosLicitacionsContratos } = require('./lib/parsearResultadosLicitacionsContratos');
+import { parsearResultadosLicitacionsContratos } from './lib/parsearResultadosLicitacionsContratos.js';
 
 // --- uso
 //  CONCELLO.json é un json key/value, sendo key o nome da entidade e value a URL directa (ver Perfil Contratante)
@@ -39,7 +39,7 @@ if(process.argv[3]) {
 loadDB(nome_db)
 
 // ler config
-const { CONFIG } = require('./lib/config.js');
+import { CONFIG } from './lib/config.js';
 
 
 // loxica
@@ -49,7 +49,7 @@ const { CONFIG } = require('./lib/config.js');
 
     const page = await browser.newPage();
     
-    //const timeout = 5000;
+    // const timeout = 5000;
     const timeout = 0;
     page.setDefaultTimeout(timeout);
 
@@ -92,12 +92,12 @@ const { CONFIG } = require('./lib/config.js');
                     const startWaitingForEvents = () => {
                         promises.push(targetPage.waitForNavigation());
                     }
-                    await puppeteer.Locator.race([
-                        targetPage.locator('input[value="' +TIPOS_A_REVISAR[db_name]+ '"]'),
-                    ])
-                        .setTimeout(timeout)
-                        .on('action', () => startWaitingForEvents())
-                        .click();
+                    // await new Promise(r => setTimeout(r, 4000));
+                    await Promise.all([
+                        page.click('input[value="' +TIPOS_A_REVISAR[db_name]+ '"]'),
+                        page.waitForNavigation({ waitUntil: 'networkidle0' }), // Wait for the new page to load
+                    ]);
+
                     await Promise.all(promises);
                 }
 
