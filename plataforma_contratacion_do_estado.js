@@ -10,7 +10,7 @@
  */
 import puppeteer from 'puppeteer';
 
-// db (as de createDb, insertDB,... empreganse no parseador e aqui non fan falha)
+// db (as de createTable, insertIntoTable,... empreganse no parseador e aqui non fan falha)
 import { loadDB } from './lib/sqliteAccions.js';
 
 // parseador de licitacions e contratos menores
