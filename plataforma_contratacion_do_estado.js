@@ -10,7 +10,7 @@
  */
 const puppeteer = require('puppeteer');
 
-// db (as de createDb, insertDB,... empreganse no parseador e aqui non fan falha)
+// db (as de createTable, insertIntoTable,... empreganse no parseador e aqui non fan falha)
 const { loadDB } = require('./lib/sqliteAccions');
 
 // parseador de licitacions e contratos menores
