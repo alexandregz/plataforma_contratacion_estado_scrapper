@@ -19,6 +19,7 @@ Polo de agora so parsea licitacións e contratos menores.
 - bun:sqlite
 - node:fs, stream e util
 - emailjs (NOTA: este necesita empregase como módulo de ECMAScript, con import en lugar dun require, polo que engadiremos '"type":"module",' no package.json do proxecto)
+- só funciona en macos/Linux pois o path ás rutas está hardcodeado con "/", eu non uso windows :-)
 
 
 ## How to
@@ -43,3 +44,7 @@ A config vai nun ficheiro `.json`, así **non hai que instalar nada** adicional.
 ## ToDo
 
 - (?) extraer URLs do Perfil Contratante directamente
+- Non enviar email se non hai cambios
+- Só enviar un email con todas as taboas
+- Expedientes anulados ou similares == tamén baixar
+- (?) cambiar creación de path de descarga para poder empregar windows
