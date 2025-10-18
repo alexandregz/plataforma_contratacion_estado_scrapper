@@ -68,7 +68,7 @@ const { CONFIG } = require('./lib/config.js');
         const url = CONFIG.ENTIDADES[entidade].url
 
         // GOTO pages
-        console.log("Aberta "+entidade+" de " + concello + ": " + url)
+        console.log("📍 Aberta "+entidade+" de " + concello + ": " + url)
         {
             const targetPage = page;
             const promises = [];
@@ -85,7 +85,7 @@ const { CONFIG } = require('./lib/config.js');
             const TIPOS_A_REVISAR = { [entidade_db + '_licitacions']: "Licitaciones", [entidade_db + '_contratos_menores']: "Contratos Menores" };
 
             for (const db_name in TIPOS_A_REVISAR) {
-                console.log(TIPOS_A_REVISAR[db_name] + "...")
+                console.log(" ✏️ " + TIPOS_A_REVISAR[db_name] + "...")
                 {
                     const targetPage = page;
                     const promises = [];
@@ -105,6 +105,7 @@ const { CONFIG } = require('./lib/config.js');
                 await parsearResultadosLicitacionsContratos(browser, page, db_name, concello, entidade)
             }
         }
+        console.log(" ");
     }
         
     await browser.close();
