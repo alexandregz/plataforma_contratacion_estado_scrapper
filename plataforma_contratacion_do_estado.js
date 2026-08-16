@@ -8,6 +8,10 @@
  * 
  * NOTA: empregar "node plataforma_contratacion_do_estado.js" se dá erro o sqlite3 de dyld[xxxx] ou similar
  */
+
+// ten que ir de primeiro, para saltar o TLS_UNATHORIZED (se o cert est� mal configurado)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 const puppeteer = require('puppeteer');
 
 // db (as de createTable, insertIntoTable,... empreganse no parseador e aqui non fan falha)
@@ -15,6 +19,7 @@ const { loadDB } = require('./lib/sqliteAccions');
 
 // parseador de licitacions e contratos menores
 const { parsearResultadosLicitacionsContratos } = require('./lib/parsearResultadosLicitacionsContratos');
+
 
 // --- uso
 //  CONCELLO.json é un json key/value, sendo key o nome da entidade e value a URL directa (ver Perfil Contratante)
