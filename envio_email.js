@@ -7,8 +7,6 @@
 const { loadDB, getAllIDsfromEntityBetweenDates } = require('./lib/sqliteAccions');
 const { enviarCorreoNovosExpedientes } = require('./lib/enviarCorreoNovosExpedientes');
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 // --- uso
 function usage() {
     console.log('Uso: '+process.argv[0]+' '+process.argv[1]+' NOME_DB TABLE [YYYY-MM-DD]')
