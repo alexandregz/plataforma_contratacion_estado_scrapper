@@ -43,8 +43,7 @@ A config vai nun ficheiro `.json`, así **non hai que instalar nada** adicional.
 
 ## ToDo
 
-- (?) extraer URLs do Perfil Contratante directamente
+- ~~(?) extraer URLs do Perfil Contratante directamente~~ (feito)
 - Non enviar email se non hai cambios
 - Só enviar un email con todas as taboas
 - Expedientes anulados ou similares == tamén baixar
-- (?) cambiar creación de path de descarga para poder empregar windows
