@@ -12,6 +12,7 @@ const {
   getTotalFilesFromExpediente,
   totalRowsInTable,
   normalizeEuroValue,
+  maxDataPublicacionBD,
 } = require('../lib/sqliteAccions');
 
 const FIXTURES = 'test/fixtures';
@@ -78,4 +79,27 @@ test('normalizeEuroValue normaliza importes europeos e ingleses', () => {
   expect(normalizeEuroValue('Obra')).toBe('Obra');
   // non-string pasa tal cal
   expect(normalizeEuroValue(123)).toBe(123);
+});
+
+test('maxDataPublicacionBD: máximo sobre celas parseables', () => {
+  createTable('taboa_datas', ['Expediente', 'Fechas']);
+  insertIntoTable('taboa_datas', ['Expediente', 'Fechas'], ['E1', '2025-05-12', 'http://u1']);
+  insertIntoTable('taboa_datas', ['Expediente', 'Fechas'], ['E2', '2025-05-18', 'http://u2']);
+  insertIntoTable('taboa_datas', ['Expediente', 'Fechas'], ['E3', '2025-05-15', 'http://u3']);
+
+  const max = maxDataPublicacionBD('taboa_datas', 'Fechas');
+  expect(max).toBe(new Date(Date.UTC(2025, 4, 18)).getTime());
+});
+
+test('maxDataPublicacionBD: táboa/columna ausente devolve null', () => {
+  expect(maxDataPublicacionBD('taboa_que_non_existe', 'Fechas')).toBeNull();
+  // táboa existe pero columna inexistente
+  expect(maxDataPublicacionBD('taboa_datas', 'Columna_Que_Non_Existe')).toBeNull();
+});
+
+test('maxDataPublicacionBD: só valores ilexibles devolve null', () => {
+  createTable('taboa_datas_ilexibles', ['Expediente', 'Fechas']);
+  insertIntoTable('taboa_datas_ilexibles', ['Expediente', 'Fechas'], ['E1', 'En trámite', 'http://u1']);
+  insertIntoTable('taboa_datas_ilexibles', ['Expediente', 'Fechas'], ['E2', 'N/A', 'http://u2']);
+  expect(maxDataPublicacionBD('taboa_datas_ilexibles', 'Fechas')).toBeNull();
 });
