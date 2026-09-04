@@ -26,20 +26,32 @@ test('alerta cando a táboa non se atopa pero ten histórico', () => {
   insertIntoTable('taboa_con_historico', ['Expediente'], ['EXP-2', 'http://url/2']);
 
   const alertas = detectarFallosSilenciosos([
-    { table: 'taboa_con_historico', encontrada: false, tenResultados: false },
+    { table: 'taboa_con_historico', encontrada: false, tenResultados: false, url: 'https://perfil.test/xunta' },
   ]);
 
   expect(alertas.length).toBe(1);
   expect(alertas[0]).toContain('taboa_con_historico');
   expect(alertas[0]).toContain('2 rexistro(s) histórico(s)');
+  // o link directo ao perfil debe aparecer (fix: alerta con link)
+  expect(alertas[0]).toContain('https://perfil.test/xunta');
+  expect(alertas[0]).toContain('🔗 Perfil');
 });
 
 test('alerta cando a táboa existe pero non devolveu resultados (con histórico)', () => {
   const alertas = detectarFallosSilenciosos([
-    { table: 'taboa_con_historico', encontrada: true, tenResultados: false },
+    { table: 'taboa_con_historico', encontrada: true, tenResultados: false, url: 'https://perfil.test/xunta' },
   ]);
   expect(alertas.length).toBe(1);
   expect(alertas[0]).toContain('non devolveu resultados');
+  expect(alertas[0]).toContain('https://perfil.test/xunta');
+});
+
+test('NON inclúe liña de perfil se o resumo non ten url', () => {
+  const alertas = detectarFallosSilenciosos([
+    { table: 'taboa_con_historico', encontrada: false, tenResultados: false },
+  ]);
+  expect(alertas.length).toBe(1);
+  expect(alertas[0]).not.toContain('🔗 Perfil');
 });
 
 test('NON alerta cando está todo correcto', () => {
