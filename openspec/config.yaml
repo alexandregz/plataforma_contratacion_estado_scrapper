@@ -1,0 +1,70 @@
+strict_tdd: true
+context: |
+  plataforma_contratacion_estado_scrapper is a JavaScript (ESM) scraper for the
+  Spanish "Plataforma de Contratación del Estado" (contrataciondelestado.es),
+  run exclusively with Bun: `bun plataforma_contratacion_do_estado.js <concello.json>`
+  (see exemplo.json for config shape).
+  Stack: puppeteer (headless browsing), bun:sqlite (persistence per concello), emailjs
+  (email alerts; requires ESM import — hence "type":"module"), node:fs/stream/util.
+  Entry point: plataforma_contratacion_do_estado.js; helpers in lib/ (sqliteAccions.js,
+  parsearResultadosLicitacionsContratos.js, enviarCorreoNovosExpedientes.js,
+  detectarFallosSilenciosos.js, baixaLinkPDF.js, baixaLinkPDF2.js, config.js,
+  getNewBrowserTab.js, creaRutaNonExiste.js).
+  Detected markers: package.json ("type":"module", script "test":"bun test"),
+  bun runtime, node_modules. Package manager: npm (package-lock.json) but the actual
+  runtime and test runner are Bun.
+  Additional evidence: tests live in test/ (3 files, 13 tests green with `bun test`):
+  sqliteAccions.test.js, detectarFallosSilenciosos.test.js, enviarCorreo.smoke.test.js
+  (smoke mocks emailjs via mock.module so no real emails are sent; DB tests use temp
+  fixtures under test/fixtures).
+  Primary test command: bun test.
+  Unit tests: bun test (test/).
+  Integration tests: none.
+  E2E tests: none (scraper needs live network and per-concello credentials).
+  Conventions: code/comments/commits in Galician; one JSON config + one .db per concello;
+  *_skipped.json for skipped entities; gitignored: *db, *json (except exemplo*.json), logs/*.
+rules:
+  proposal:
+    require_problem_statement: true
+  spec:
+    require_acceptance_criteria: true
+  design:
+    require_tradeoffs: true
+  tasks:
+    protect_review_workload: true
+  apply:
+    test_command: "bun test"
+  verify:
+    test_command: "bun test"
+testing:
+  detected: "2026-09-05"
+  runner:
+    command: "bun test"
+    framework: "bun test"
+  layers:
+    unit: "bun test (test/*.test.js)"
+    integration: ""
+    e2e: ""
+  commands:
+    unit:
+      - scope: "."
+        command: "bun test"
+        framework: "bun test"
+    integration:
+      []
+    e2e:
+      []
+  coverage:
+    command: ""
+    commands:
+      []
+quality:
+  lint: ""
+  lint_commands:
+    []
+  typecheck: ""
+  typecheck_commands:
+    []
+  format: ""
+  format_commands:
+    []
