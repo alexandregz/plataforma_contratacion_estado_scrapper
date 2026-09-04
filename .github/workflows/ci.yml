@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: bun test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      # sen `bun install`: package.json non está versionado neste repo,
+      # e os tests non requiren dependencias externas (bun:sqlite nativo,
+      # emailjs mockeado con mock.module).
+      - run: bun test
