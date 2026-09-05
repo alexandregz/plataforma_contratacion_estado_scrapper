@@ -22,6 +22,8 @@ let emptyCfgAbs, fullCfgAbs, tmpDbBase, tmpDbFile;
 function abs(rel) { return path.join(process.cwd(), rel); }
 
 function recargarModulosEmail() {
+  // NO borramos sqliteAccions da cache: iso rompería a ligazón a DB (loadDB é unha vez).
+  // A copia cacheada xa ten as funcións de dedup exportadas.
   delete require.cache[require.resolve('../lib/config.js')];
   delete require.cache[require.resolve('../lib/enviarCorreoNovosExpedientes.js')];
   return require('../lib/enviarCorreoNovosExpedientes.js');

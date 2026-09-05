@@ -15,6 +15,7 @@ const {
   createEmailEnviados,
   expedientesXaEnviados,
   marcarExpedientesEnviados,
+  getExpedientesNonNotificados,
 } = require('../lib/sqliteAccions');
 
 const FIXTURES = 'test/fixtures';
@@ -48,8 +49,6 @@ test('totalRowsInTable devolve 0 para táboa inexistente', () => {
 });
 
 test('existsRecord: contrato actual usado no parseador (=== false cando non existe)', () => {
-  // NOTA: a corrección de que devolva booleano true/false explícito é a Tarefa 4,
-  // que levará os seus propios tests. Aquí validamos o contrato actual do chamador.
   expect(existsRecord(TABLA, CABECEIRAS, ['EXP-NONEXISTE']) === false).toBe(true);
   expect(existsRecord(TABLA, CABECEIRAS, ['EXP-0001']) !== false).toBe(true);
 });
@@ -105,4 +104,21 @@ test('email_enviados: independente por táboa', () => {
   marcarExpedientesEnviados('outra_taboa', ['EXP-Z']);
   expect(expedientesXaEnviados('taboa_licitacions')).not.toContain('EXP-Z');
   expect(expedientesXaEnviados('outra_taboa')).toContain('EXP-Z');
+});
+
+test('getExpedientesNonNotificados: devolve só os non marcados, sen límite de data', () => {
+  // EXP-0001 e EXP-0002 existen na táboa e non están marcados
+  const ids = getExpedientesNonNotificados(TABLA).map(r => r.Expediente);
+  expect(ids).toContain('EXP-0001');
+  expect(ids).toContain('EXP-0002');
+
+  // marcamos EXP-0001 → só debería quedar EXP-0002 como pendente
+  marcarExpedientesEnviados(TABLA, ['EXP-0001']);
+  const ids2 = getExpedientesNonNotificados(TABLA).map(r => r.Expediente);
+  expect(ids2).toContain('EXP-0002');
+  expect(ids2).not.toContain('EXP-0001');
+
+  // marcamos tamén EXP-0002 → non queda ningún pendente
+  marcarExpedientesEnviados(TABLA, ['EXP-0002']);
+  expect(getExpedientesNonNotificados(TABLA).length).toBe(0);
 });
