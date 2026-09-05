@@ -21,7 +21,7 @@ const { loadDB } = require('./lib/sqliteAccions');
 const { parsearResultadosLicitacionsContratos } = require('./lib/parsearResultadosLicitacionsContratos');
 
 // alerta de fallos silenciosos
-const { enviarCorreoAlertas } = require('./lib/enviarCorreoNovosExpedientes');
+const { enviarCorreoAlertas, enviarCorreoDebugStart, enviarCorreoDebugEnd } = require('./lib/enviarCorreoNovosExpedientes');
 
 // detección de táboas que non produciron resultados con histórico previo
 const { detectarFallosSilenciosos } = require('./lib/detectarFallosSilenciosos');
@@ -52,9 +52,13 @@ loadDB(nome_db)
 // ler config
 const { CONFIG } = require('./lib/config.js');
 
+    // momento de inicio (para os correos de debug e a duración)
+    const horaInicio = new Date();
+
 
 (async () => {
-  const browser = await puppeteer.launch();
+  try { await enviarCorreoDebugStart(concello); } catch (e) { console.error('Non se puido enviar o correo de inicio:', e); }
+      const browser = await puppeteer.launch();
   // const browser = await puppeteer.launch({headless: false});
 
   const page = await browser.newPage();
@@ -135,8 +139,13 @@ const { CONFIG } = require('./lib/config.js');
 
   await browser.close();
 
+      // correo de fin de depuración (execución correcta)
+      try { await enviarCorreoDebugEnd(concello, horaInicio); } catch (e) { console.error('Non se puido enviar o correo de fin:', e); }
+
 })().catch(async (err) => {
   console.error(err);
+      // correo de fin de depuración (execución con erro)
+      try { await enviarCorreoDebugEnd(concello, horaInicio, err); } catch (e) { console.error('Non se puido enviar o correo de fin (erro):', e); }
   // alerta de erro fatal: o run morreu antes de rematar
   try {
     await enviarCorreoAlertas(concello, [`Erro fatal durante a execución: ${err.message || err}`]);

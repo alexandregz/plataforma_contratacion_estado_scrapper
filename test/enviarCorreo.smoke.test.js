@@ -22,6 +22,8 @@ let emptyCfgAbs, fullCfgAbs, tmpDbBase, tmpDbFile;
 function abs(rel) { return path.join(process.cwd(), rel); }
 
 function recargarModulosEmail() {
+  // NO borramos sqliteAccions da cache: iso rompería a ligazón a DB (loadDB é unha vez).
+  // A copia cacheada xa ten as funcións de dedup exportadas.
   delete require.cache[require.resolve('../lib/config.js')];
   delete require.cache[require.resolve('../lib/enviarCorreoNovosExpedientes.js')];
   return require('../lib/enviarCorreoNovosExpedientes.js');
@@ -38,6 +40,7 @@ beforeAll(() => {
     ENTIDADES: {},
     EMAIL_CAMPOS_ENVIO: { from: 'remitente@test.local', to: 'destino@test.local' },
     EMAIL_CONFIG: { user: 'user', password: 'pass', host: 'smtp.test.local', ssl: true },
+    EMAIL_DEBUG: true,
   }));
 
   tmpDbBase = `test/fixtures/tmp_db_${Date.now()}`;
@@ -65,12 +68,13 @@ test('emailConfigurado() é false con config baleira e true con config completa'
 });
 
 test('con config de email baleira non intenta enviar e non peta (regresión do erro)', async () => {
+  process.argv[2] = 'test/fixtures/tmp_empty_email.json';
   const { loadDB, createTable, insertIntoTable } = require('../lib/sqliteAccions');
   loadDB(tmpDbBase);
   createTable('tbl_alerta', ['Expediente']);
   insertIntoTable('tbl_alerta', ['Expediente'], ['EXP-ALERTA-1', 'http://url/x']);
 
-  const mod = recargarModulosEmail(); // CONFIG baleira (argv[2] = emptyCfgRel)
+  const mod = recargarModulosEmail();
   expect(mod.emailConfigurado()).toBe(false);
 
   const enviadosAntes = enviados.length;
@@ -81,7 +85,7 @@ test('con config de email baleira non intenta enviar e non peta (regresión do e
 });
 
 test('con config completa si envía (vía SMTPClient mockeado)', async () => {
-  process.argv[2] = fullCfgRel;
+  process.argv[2] = 'test/fixtures/tmp_full_email.json';
   const mod = recargarModulosEmail(); // CONFIG completa
   expect(mod.emailConfigurado()).toBe(true);
 
@@ -93,4 +97,54 @@ test('con config completa si envía (vía SMTPClient mockeado)', async () => {
   expect(ultimo.subject).toContain('ALERTA');
   expect(ultimo.from).toBe('remitente@test.local');
   expect(ultimo.text).toContain('Táboa X');
+});
+
+test('non reenvía o mesmo expediente xa notificado (dedup en re-execución)', async () => {
+  process.argv[2] = 'test/fixtures/tmp_full_email.json';
+  const mod = recargarModulosEmail();
+  // tbl_alerta (con EXP-ALERTA-1 inserido hoxe) foi creada no test de config baleira
+  const antes = enviados.length;
+
+  // primeira execución: envíase e márcase en email_enviados
+  const r1 = await mod.enviarCorreoNovosExpedientes('teste', 'tbl_alerta');
+  expect(r1).not.toBeNull();
+  expect(enviados.length).toBe(antes + 1);
+
+  // segunda execución o mesmo día: dedup ⇒ non se envía
+  const r2 = await mod.enviarCorreoNovosExpedientes('teste', 'tbl_alerta');
+  expect(r2).toBeNull();
+  expect(enviados.length).toBe(antes + 1);
+});
+
+test('todos os de hoxe xa notificados devolve null (sen envío)', async () => {
+  process.argv[2] = 'test/fixtures/tmp_full_email.json';
+  const mod = recargarModulosEmail();
+  const r = await mod.enviarCorreoNovosExpedientes('teste', 'tbl_alerta');
+  expect(r).toBeNull();
+});
+
+test('envía correo de inicio e fin con EMAIL_DEBUG true', async () => {
+  process.argv[2] = 'test/fixtures/tmp_full_email.json'; // ten EMAIL_DEBUG: true
+  const mod = recargarModulosEmail();
+  const antes = enviados.length;
+
+  const start = await mod.enviarCorreoDebugStart('teste');
+  expect(start).not.toBeNull();
+  expect(enviados.length).toBe(antes + 1);
+  expect(enviados[enviados.length - 1].subject).toContain('DEBUG');
+  expect(enviados[enviados.length - 1].subject).toContain('Inicio');
+
+  const end = await mod.enviarCorreoDebugEnd('teste', new Date());
+  expect(end).not.toBeNull();
+  expect(enviados.length).toBe(antes + 2);
+  expect(enviados[enviados.length - 1].subject).toContain('Fin');
+});
+
+test('non envía correo de debug con EMAIL_DEBUG off/sen flag', async () => {
+  process.argv[2] = 'test/fixtures/tmp_empty_email.json'; // sen EMAIL_DEBUG
+  const mod = recargarModulosEmail();
+  const antes = enviados.length;
+  const start = await mod.enviarCorreoDebugStart('teste');
+  expect(start).toBeNull();
+  expect(enviados.length).toBe(antes);
 });

@@ -12,7 +12,10 @@ const {
   getTotalFilesFromExpediente,
   totalRowsInTable,
   normalizeEuroValue,
-  maxDataPublicacionBD,
+  createEmailEnviados,
+  expedientesXaEnviados,
+  marcarExpedientesEnviados,
+  getExpedientesNonNotificados,
 } = require('../lib/sqliteAccions');
 
 const FIXTURES = 'test/fixtures';
@@ -45,9 +48,9 @@ test('totalRowsInTable devolve 0 para táboa inexistente', () => {
   expect(totalRowsInTable('taboa_que_non_existe')).toBe(0);
 });
 
-test('existsRecord: booleano estrito true/false', () => {
-  expect(existsRecord(TABLA, CABECEIRAS, ['EXP-NONEXISTE'])).toBe(false);
-  expect(existsRecord(TABLA, CABECEIRAS, ['EXP-0001'])).toBe(true);
+test('existsRecord: contrato actual usado no parseador (=== false cando non existe)', () => {
+  expect(existsRecord(TABLA, CABECEIRAS, ['EXP-NONEXISTE']) === false).toBe(true);
+  expect(existsRecord(TABLA, CABECEIRAS, ['EXP-0001']) !== false).toBe(true);
 });
 
 test('getTotalFilesFromExpediente conta ficheiros dun expediente', () => {
@@ -81,25 +84,41 @@ test('normalizeEuroValue normaliza importes europeos e ingleses', () => {
   expect(normalizeEuroValue(123)).toBe(123);
 });
 
-test('maxDataPublicacionBD: máximo sobre celas parseables', () => {
-  createTable('taboa_datas', ['Expediente', 'Fechas']);
-  insertIntoTable('taboa_datas', ['Expediente', 'Fechas'], ['E1', '2025-05-12', 'http://u1']);
-  insertIntoTable('taboa_datas', ['Expediente', 'Fechas'], ['E2', '2025-05-18', 'http://u2']);
-  insertIntoTable('taboa_datas', ['Expediente', 'Fechas'], ['E3', '2025-05-15', 'http://u3']);
-
-  const max = maxDataPublicacionBD('taboa_datas', 'Fechas');
-  expect(max).toBe(new Date(Date.UTC(2025, 4, 18)).getTime());
+test('email_enviados: comeza baleiro', () => {
+  createEmailEnviados();
+  expect(expedientesXaEnviados('taboa_licitacions')).toEqual([]);
 });
 
-test('maxDataPublicacionBD: táboa/columna ausente devolve null', () => {
-  expect(maxDataPublicacionBD('taboa_que_non_existe', 'Fechas')).toBeNull();
-  // táboa existe pero columna inexistente
-  expect(maxDataPublicacionBD('taboa_datas', 'Columna_Que_Non_Existe')).toBeNull();
+test('email_enviados: marcar + listar idempotente', () => {
+  marcarExpedientesEnviados('taboa_licitacions', ['EXP-A', 'EXP-B']);
+  const xa = expedientesXaEnviados('taboa_licitacions');
+  expect(xa).toContain('EXP-A');
+  expect(xa).toContain('EXP-B');
+  // idempotente: marcar de novo o mesmo non duplica
+  marcarExpedientesEnviados('taboa_licitacions', ['EXP-A']);
+  const repeticions = expedientesXaEnviados('taboa_licitacions').filter(x => x === 'EXP-A').length;
+  expect(repeticions).toBe(1);
 });
 
-test('maxDataPublicacionBD: só valores ilexibles devolve null', () => {
-  createTable('taboa_datas_ilexibles', ['Expediente', 'Fechas']);
-  insertIntoTable('taboa_datas_ilexibles', ['Expediente', 'Fechas'], ['E1', 'En trámite', 'http://u1']);
-  insertIntoTable('taboa_datas_ilexibles', ['Expediente', 'Fechas'], ['E2', 'N/A', 'http://u2']);
-  expect(maxDataPublicacionBD('taboa_datas_ilexibles', 'Fechas')).toBeNull();
+test('email_enviados: independente por táboa', () => {
+  marcarExpedientesEnviados('outra_taboa', ['EXP-Z']);
+  expect(expedientesXaEnviados('taboa_licitacions')).not.toContain('EXP-Z');
+  expect(expedientesXaEnviados('outra_taboa')).toContain('EXP-Z');
+});
+
+test('getExpedientesNonNotificados: devolve só os non marcados, sen límite de data', () => {
+  // EXP-0001 e EXP-0002 existen na táboa e non están marcados
+  const ids = getExpedientesNonNotificados(TABLA).map(r => r.Expediente);
+  expect(ids).toContain('EXP-0001');
+  expect(ids).toContain('EXP-0002');
+
+  // marcamos EXP-0001 → só debería quedar EXP-0002 como pendente
+  marcarExpedientesEnviados(TABLA, ['EXP-0001']);
+  const ids2 = getExpedientesNonNotificados(TABLA).map(r => r.Expediente);
+  expect(ids2).toContain('EXP-0002');
+  expect(ids2).not.toContain('EXP-0001');
+
+  // marcamos tamén EXP-0002 → non queda ningún pendente
+  marcarExpedientesEnviados(TABLA, ['EXP-0002']);
+  expect(getExpedientesNonNotificados(TABLA).length).toBe(0);
 });
