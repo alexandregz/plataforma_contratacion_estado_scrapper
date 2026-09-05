@@ -65,12 +65,13 @@ test('emailConfigurado() é false con config baleira e true con config completa'
 });
 
 test('con config de email baleira non intenta enviar e non peta (regresión do erro)', async () => {
+  process.argv[2] = 'test/fixtures/tmp_empty_email.json';
   const { loadDB, createTable, insertIntoTable } = require('../lib/sqliteAccions');
   loadDB(tmpDbBase);
   createTable('tbl_alerta', ['Expediente']);
   insertIntoTable('tbl_alerta', ['Expediente'], ['EXP-ALERTA-1', 'http://url/x']);
 
-  const mod = recargarModulosEmail(); // CONFIG baleira (argv[2] = emptyCfgRel)
+  const mod = recargarModulosEmail();
   expect(mod.emailConfigurado()).toBe(false);
 
   const enviadosAntes = enviados.length;
@@ -81,7 +82,7 @@ test('con config de email baleira non intenta enviar e non peta (regresión do e
 });
 
 test('con config completa si envía (vía SMTPClient mockeado)', async () => {
-  process.argv[2] = fullCfgRel;
+  process.argv[2] = 'test/fixtures/tmp_full_email.json';
   const mod = recargarModulosEmail(); // CONFIG completa
   expect(mod.emailConfigurado()).toBe(true);
 
@@ -93,4 +94,28 @@ test('con config completa si envía (vía SMTPClient mockeado)', async () => {
   expect(ultimo.subject).toContain('ALERTA');
   expect(ultimo.from).toBe('remitente@test.local');
   expect(ultimo.text).toContain('Táboa X');
+});
+
+test('non reenvía o mesmo expediente xa notificado (dedup en re-execución)', async () => {
+  process.argv[2] = 'test/fixtures/tmp_full_email.json';
+  const mod = recargarModulosEmail();
+  // tbl_alerta (con EXP-ALERTA-1 inserido hoxe) foi creada no test de config baleira
+  const antes = enviados.length;
+
+  // primeira execución: envíase e márcase en email_enviados
+  const r1 = await mod.enviarCorreoNovosExpedientes('teste', 'tbl_alerta');
+  expect(r1).not.toBeNull();
+  expect(enviados.length).toBe(antes + 1);
+
+  // segunda execución o mesmo día: dedup ⇒ non se envía
+  const r2 = await mod.enviarCorreoNovosExpedientes('teste', 'tbl_alerta');
+  expect(r2).toBeNull();
+  expect(enviados.length).toBe(antes + 1);
+});
+
+test('todos os de hoxe xa notificados devolve null (sen envío)', async () => {
+  process.argv[2] = 'test/fixtures/tmp_full_email.json';
+  const mod = recargarModulosEmail();
+  const r = await mod.enviarCorreoNovosExpedientes('teste', 'tbl_alerta');
+  expect(r).toBeNull();
 });
