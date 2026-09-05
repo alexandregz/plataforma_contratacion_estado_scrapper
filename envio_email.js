@@ -5,7 +5,7 @@
  *    exemplo: $ bun envio_email.js ames_skipped_test|ames|san_cibrao_das_vinhas Alcaldia_licitacions|Alcaldia_contratos_menores
  */
 const { loadDB, getAllIDsfromEntityBetweenDates } = require('./lib/sqliteAccions');
-const { enviarCorreoNovosExpedientes } = require('./lib/enviarCorreoNovosExpedientes');
+const { enviarCorreoNovosExpedientes } = await import('./lib/enviarCorreoNovosExpedientes.js');
 
 // --- uso
 function usage() {
