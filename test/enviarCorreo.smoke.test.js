@@ -40,6 +40,7 @@ beforeAll(() => {
     ENTIDADES: {},
     EMAIL_CAMPOS_ENVIO: { from: 'remitente@test.local', to: 'destino@test.local' },
     EMAIL_CONFIG: { user: 'user', password: 'pass', host: 'smtp.test.local', ssl: true },
+    EMAIL_DEBUG: true,
   }));
 
   tmpDbBase = `test/fixtures/tmp_db_${Date.now()}`;
@@ -120,4 +121,30 @@ test('todos os de hoxe xa notificados devolve null (sen envío)', async () => {
   const mod = recargarModulosEmail();
   const r = await mod.enviarCorreoNovosExpedientes('teste', 'tbl_alerta');
   expect(r).toBeNull();
+});
+
+test('envía correo de inicio e fin con EMAIL_DEBUG true', async () => {
+  process.argv[2] = 'test/fixtures/tmp_full_email.json'; // ten EMAIL_DEBUG: true
+  const mod = recargarModulosEmail();
+  const antes = enviados.length;
+
+  const start = await mod.enviarCorreoDebugStart('teste');
+  expect(start).not.toBeNull();
+  expect(enviados.length).toBe(antes + 1);
+  expect(enviados[enviados.length - 1].subject).toContain('DEBUG');
+  expect(enviados[enviados.length - 1].subject).toContain('Inicio');
+
+  const end = await mod.enviarCorreoDebugEnd('teste', new Date());
+  expect(end).not.toBeNull();
+  expect(enviados.length).toBe(antes + 2);
+  expect(enviados[enviados.length - 1].subject).toContain('Fin');
+});
+
+test('non envía correo de debug con EMAIL_DEBUG off/sen flag', async () => {
+  process.argv[2] = 'test/fixtures/tmp_empty_email.json'; // sen EMAIL_DEBUG
+  const mod = recargarModulosEmail();
+  const antes = enviados.length;
+  const start = await mod.enviarCorreoDebugStart('teste');
+  expect(start).toBeNull();
+  expect(enviados.length).toBe(antes);
 });
