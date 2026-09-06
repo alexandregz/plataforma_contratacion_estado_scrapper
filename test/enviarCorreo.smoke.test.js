@@ -148,3 +148,33 @@ test('non envía correo de debug con EMAIL_DEBUG off/sen flag', async () => {
   expect(start).toBeNull();
   expect(enviados.length).toBe(antes);
 });
+
+test('enviarCorreoUnicoAgregado: un só correo agrupado por táboa', async () => {
+  process.argv[2] = 'test/fixtures/tmp_full_email.json'; // EMAIL_DEBUG + email config
+  const { loadDB, createTable, insertIntoTable } = require('../lib/sqliteAccions');
+  loadDB(tmpDbBase);
+  createTable('uniqA', ['Expediente']);
+  createTable('uniqB', ['Expediente']);
+  insertIntoTable('uniqA', ['Expediente'], ['UA-1', 'http://u']);
+  insertIntoTable('uniqB', ['Expediente'], ['UB-1', 'http://u']);
+
+  const mod = recargarModulosEmail();
+  const antes = enviados.length;
+  const r = await mod.enviarCorreoUnicoAgregado('teste', ['uniqA', 'uniqB']);
+  expect(r).not.toBeNull();
+  expect(enviados.length).toBe(antes + 1); // un só correo, non dous
+  const ultimo = enviados[enviados.length - 1];
+  expect(ultimo.subject).toContain('NOVOS PENDENTES');
+  expect(ultimo.text).toContain('========== uniqA');
+  expect(ultimo.text).toContain('========== uniqB');
+});
+
+test('enviarCorreoUnicoAgregado: sen pendentes devolve null', async () => {
+  process.argv[2] = 'test/fixtures/tmp_full_email.json';
+  const mod = recargarModulosEmail();
+  const antes = enviados.length;
+  // uniqA/uniqB xa quedaron marcados no test anterior
+  const r = await mod.enviarCorreoUnicoAgregado('teste', ['uniqA', 'uniqB']);
+  expect(r).toBeNull();
+  expect(enviados.length).toBe(antes);
+});

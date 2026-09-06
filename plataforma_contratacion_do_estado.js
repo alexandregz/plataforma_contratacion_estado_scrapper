@@ -21,7 +21,7 @@ const { loadDB } = require('./lib/sqliteAccions');
 const { parsearResultadosLicitacionsContratos } = require('./lib/parsearResultadosLicitacionsContratos');
 
 // alerta de fallos silenciosos
-const { enviarCorreoAlertas, enviarCorreoDebugStart, enviarCorreoDebugEnd } = require('./lib/enviarCorreoNovosExpedientes');
+const { enviarCorreoAlertas, enviarCorreoDebugStart, enviarCorreoDebugEnd, enviarCorreoUnicoAgregado } = require('./lib/enviarCorreoNovosExpedientes');
 
 // detección de táboas que non produciron resultados con histórico previo
 const { detectarFallosSilenciosos } = require('./lib/detectarFallosSilenciosos');
@@ -77,6 +77,7 @@ const { CONFIG } = require('./lib/config.js');
 
   // recolle o estado de cada táboa revisada para detectar fallos silenciosos ao final
   const resumos = [];
+      const tablesRevisadas = [];
 
   // as entidades do .json vanse recorrendo unha a unha
   for (const entidade in CONFIG.ENTIDADES) {
@@ -120,13 +121,16 @@ const { CONFIG } = require('./lib/config.js');
 
         // exportada loxica a módulo
         resumos.push(await parsearResultadosLicitacionsContratos(browser, page, db_name, concello, entidade))
+            tablesRevisadas.push(db_name)
       }
     }
     console.log(" ");
   }
 
   // ALERTA de fallos silenciosos despois de revisar todas as entidades
-  const alertas = detectarFallosSilenciosos(resumos);
+  try { await enviarCorreoUnicoAgregado(concello, tablesRevisadas); } catch (e) { console.error('Non se puido enviar o correo único:', e); }
+
+      const alertas = detectarFallosSilenciosos(resumos);
   if (alertas.length > 0) {
     try {
       await enviarCorreoAlertas(concello, alertas);
