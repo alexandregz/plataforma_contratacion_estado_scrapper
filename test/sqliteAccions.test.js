@@ -122,3 +122,9 @@ test('getExpedientesNonNotificados: devolve só os non marcados, sen límite de 
   marcarExpedientesEnviados(TABLA, ['EXP-0002']);
   expect(getExpedientesNonNotificados(TABLA).length).toBe(0);
 });
+
+test('getExpedientesNonNotificados: táboa inexistente devolve [] sen petar (regresión correo único)', () => {
+  // Reproduce o fallo real: Pleno_contratos_menores nunca se crea porque o Pleno non publica contratos menores.
+  // Antes do fix isto lanzaba SQLiteError: no such table e tiraba abaixo o correo único enteiro.
+  expect(getExpedientesNonNotificados('Pleno_contratos_menores')).toEqual([]);
+});
